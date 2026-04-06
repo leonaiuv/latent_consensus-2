@@ -1,0 +1,10 @@
+inherits: local_base.yaml
+
+experiment:
+  phase: optional
+  gated: true
+
+model:
+  name: optional_independent
+  weight_mode: independent
+  observe: on

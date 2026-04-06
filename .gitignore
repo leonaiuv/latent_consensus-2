@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Results and checkpoints
+checkpoints/**
+!checkpoints/.gitkeep
+logs/**
+!logs/.gitkeep
+results/**
+!results/gate0/
+!results/arithmetic_debug/
+!results/brs_main/
+!results/interventions/
+!results/promotion/
+!results/accounting/
+!results/**/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+
+# Local env
+.DS_Store

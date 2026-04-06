@@ -1,0 +1,26 @@
+experiment:
+  phase: phase0
+  device: mps
+
+data:
+  root: data/processed
+  dataset: placeholder
+
+model:
+  base_model: gpt2
+  weight_mode: shared
+  n_processors: 1
+  k_steps: 5
+
+training:
+  seq_len: 192
+  effective_batch_size: 64
+  micro_batch_size: 2
+  gradient_accumulation_steps: 32
+  max_epoch: 30
+  early_stopping_patience: 5
+
+logging:
+  results_root: results
+  checkpoints_root: checkpoints
+  logs_root: logs

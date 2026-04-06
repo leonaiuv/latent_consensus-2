@@ -1,0 +1,13 @@
+inherits: local_base.yaml
+
+experiment:
+  phase: phase2
+  name: brs_main
+
+data:
+  dataset: brs
+  steps: [2, 4, 6]
+  train_per_step: 4000
+  val_per_step: 400
+  test_per_step: 400
+  ood_per_step: 400

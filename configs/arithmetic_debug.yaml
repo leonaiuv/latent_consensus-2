@@ -1,0 +1,13 @@
+inherits: local_base.yaml
+
+experiment:
+  phase: phase1
+  name: arithmetic_debug
+
+data:
+  dataset: arithmetic_debug
+  steps: [2, 4, 6]
+  train_per_step: 2000
+  val_per_step: 200
+  test_per_step: 200
+  ood_per_step: 200

@@ -1,0 +1,7 @@
+inherits: local_base.yaml
+
+model:
+  name: lc3_shared
+  n_processors: 3
+  weight_mode: shared
+  observe: on

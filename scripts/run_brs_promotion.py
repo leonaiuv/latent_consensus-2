@@ -1,0 +1,11 @@
+"""BRS 条件晋级执行入口占位。"""
+
+from __future__ import annotations
+
+
+def main() -> None:
+    print("占位入口：后续执行 EXP-C01 到 EXP-C04。")
+
+
+if __name__ == "__main__":
+    main()
