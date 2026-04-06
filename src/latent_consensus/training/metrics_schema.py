@@ -27,6 +27,8 @@ REQUIRED_PROFILE_MEMORY_FIELDS = {
     "recommended_max_memory",
     "oom",
     "fallback_triggered",
+    "runtime_status",
+    "error_message",
 }
 
 

@@ -33,6 +33,8 @@ def test_profile_memory_schema_covers_required_fields() -> None:
         "recommended_max_memory",
         "oom",
         "fallback_triggered",
+        "runtime_status",
+        "error_message",
     }
     assert expected_fields.issubset(REQUIRED_PROFILE_MEMORY_FIELDS)
 

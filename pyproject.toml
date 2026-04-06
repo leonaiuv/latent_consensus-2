@@ -8,10 +8,15 @@ version = "0.1.0"
 description = "Latent Consensus v1.2.3 本地最小因果闭环实验工程"
 readme = "latent_consensus_engineering_execution_manual_v1_2_3.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "datasets==4.8.4",
+    "pyyaml>=6.0.3",
+    "torch==2.11.0",
+    "transformers==5.5.0",
+]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=9.0"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -22,4 +27,3 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-asyncio_default_fixture_loop_scope = "function"
