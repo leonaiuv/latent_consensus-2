@@ -1,0 +1,75 @@
+{
+  "experiment_id": "EXP-A03",
+  "dataset_name": "arithmetic_debug",
+  "model_family": "lcn_shared",
+  "seed": 42,
+  "runtime_mode": "real",
+  "history": {
+    "epochs": [
+      {
+        "epoch": 0,
+        "train_loss": 1.9618252889874082,
+        "val_loss": 0.5661619330445925,
+        "val_exact_match": 0.9427083333333334
+      },
+      {
+        "epoch": 1,
+        "train_loss": 0.5846069481534263,
+        "val_loss": 0.46114368674655754,
+        "val_exact_match": 1.0
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.48234445256336284,
+        "val_loss": 0.4210917850335439,
+        "val_exact_match": 1.0
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.43146913168796647,
+        "val_loss": 0.4010125106821458,
+        "val_exact_match": 1.0
+      },
+      {
+        "epoch": 4,
+        "train_loss": 0.4052290432931234,
+        "val_loss": 0.3783290955858926,
+        "val_exact_match": 1.0
+      }
+    ],
+    "best_epoch": 4
+  },
+  "seq_len": 192,
+  "step_counts": [
+    2,
+    4,
+    6
+  ],
+  "val_metrics": {
+    "loss": 0.3783290955858926,
+    "exact_match": 1.0,
+    "step_accuracy": {
+      "2": 1.0,
+      "4": 1.0,
+      "6": 1.0
+    }
+  },
+  "test_metrics": {
+    "loss": 0.37906216938669485,
+    "exact_match": 0.9947916666666666,
+    "step_accuracy": {
+      "2": 1.0,
+      "4": 1.0,
+      "6": 0.984375
+    }
+  },
+  "ood_metrics": {
+    "loss": 0.46847692380348843,
+    "exact_match": 1.0,
+    "step_accuracy": {
+      "2": 1.0,
+      "4": 1.0,
+      "6": 1.0
+    }
+  }
+}

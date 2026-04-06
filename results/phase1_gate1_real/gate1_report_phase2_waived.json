@@ -1,0 +1,109 @@
+{
+  "stage": "phase1_gate1",
+  "passed": false,
+  "cot_lc1_stable": true,
+  "shared_runs_complete": true,
+  "artifacts_complete": true,
+  "stability_checks": {
+    "EXP-A01": {
+      "stable": true,
+      "epoch_count": 5,
+      "best_epoch": 4,
+      "finite_losses": true
+    },
+    "EXP-A02": {
+      "stable": true,
+      "epoch_count": 5,
+      "best_epoch": 4,
+      "finite_losses": true
+    },
+    "EXP-A03": {
+      "stable": true,
+      "epoch_count": 5,
+      "best_epoch": 4,
+      "finite_losses": true
+    },
+    "EXP-A04": {
+      "stable": true,
+      "epoch_count": 5,
+      "best_epoch": 4,
+      "finite_losses": true
+    },
+    "EXP-A05": {
+      "stable": true,
+      "epoch_count": 5,
+      "best_epoch": 4,
+      "finite_losses": true
+    },
+    "EXP-A06": {
+      "stable": true,
+      "epoch_count": 5,
+      "best_epoch": 4,
+      "finite_losses": true
+    }
+  },
+  "gradient_check": {
+    "min_step": 2,
+    "max_step": 6,
+    "min_pass_count": 4,
+    "min_mean_delta": 0.05,
+    "pass_count": 2,
+    "mean_delta": 0.005208333333333333,
+    "passed": false,
+    "per_experiment": [
+      {
+        "experiment_id": "EXP-A01",
+        "step_accuracy_low": 1.0,
+        "step_accuracy_high": 1.0,
+        "delta": 0.0,
+        "passed": false
+      },
+      {
+        "experiment_id": "EXP-A02",
+        "step_accuracy_low": 1.0,
+        "step_accuracy_high": 1.0,
+        "delta": 0.0,
+        "passed": false
+      },
+      {
+        "experiment_id": "EXP-A03",
+        "step_accuracy_low": 1.0,
+        "step_accuracy_high": 0.984375,
+        "delta": 0.015625,
+        "passed": true
+      },
+      {
+        "experiment_id": "EXP-A04",
+        "step_accuracy_low": 1.0,
+        "step_accuracy_high": 0.984375,
+        "delta": 0.015625,
+        "passed": true
+      },
+      {
+        "experiment_id": "EXP-A05",
+        "step_accuracy_low": 1.0,
+        "step_accuracy_high": 1.0,
+        "delta": 0.0,
+        "passed": false
+      },
+      {
+        "experiment_id": "EXP-A06",
+        "step_accuracy_low": 1.0,
+        "step_accuracy_high": 1.0,
+        "delta": 0.0,
+        "passed": false
+      }
+    ]
+  },
+  "artifact_check": {
+    "passed": true,
+    "missing_by_experiment": {}
+  },
+  "notes": [
+    "2-step 相对 6-step 的难度梯度仍不清晰，当前不能视为正式 Gate 1 通过。",
+    "研究决策：接受 Arithmetic 作为链路验证已完成，允许进入 BRS 主线。"
+  ],
+  "waived_for_phase2": true,
+  "waiver_reason": "Gate 1 工程目的已达成：CoT/LC-1 稳定、shared runs 完整、指标与产物可导出；唯一未过项为 Arithmetic 难度梯度受天花板效应影响，研究决策接受其作为链路验证已完成，直接进入 BRS 主线。",
+  "phase2_entry_mode": "research_waiver"
+}

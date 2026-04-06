@@ -204,6 +204,107 @@ def _load_answer_correctness(prediction_path: Path) -> list[int]:
     ]
 
 
+def _build_real_datasets(
+    spec,
+    data_dir: Path,
+    tokenizer,
+    step_counts: tuple[int, ...] | None,
+    train_limit_per_step: int | None,
+    val_limit_per_step: int | None,
+    test_limit_per_step: int | None,
+    ood_limit_per_step: int | None,
+    seq_len: int | None,
+) -> tuple[dict[str, list], int, tuple[int, ...]]:
+    resolved_step_counts = step_counts or tuple(
+        spec.resolved_config["data"].get("steps", [2, 4, 6])
+    )
+    training_config = spec.resolved_config["training"]
+    resolved_seq_len = int(seq_len or training_config.get("seq_len", 192))
+
+    train_examples = build_brs_lm_examples(
+        data_dir=data_dir,
+        split_name="train",
+        step_counts=resolved_step_counts,
+        sample_limit_per_step=_resolve_limit(train_limit_per_step, None),
+    )
+    val_examples = build_brs_lm_examples(
+        data_dir=data_dir,
+        split_name="val",
+        step_counts=resolved_step_counts,
+        sample_limit_per_step=_resolve_limit(val_limit_per_step, None),
+    )
+    test_examples = build_brs_lm_examples(
+        data_dir=data_dir,
+        split_name="test",
+        step_counts=resolved_step_counts,
+        sample_limit_per_step=_resolve_limit(test_limit_per_step, None),
+    )
+    ood_examples = build_brs_lm_examples(
+        data_dir=data_dir,
+        split_name="ood",
+        step_counts=resolved_step_counts,
+        sample_limit_per_step=_resolve_limit(ood_limit_per_step, None),
+    )
+
+    datasets = {
+        "train": tokenize_lm_examples(
+            train_examples,
+            tokenizer=tokenizer,
+            seq_len=resolved_seq_len,
+        ),
+        "val": tokenize_lm_examples(
+            val_examples,
+            tokenizer=tokenizer,
+            seq_len=resolved_seq_len,
+        ),
+        "test": tokenize_lm_examples(
+            test_examples,
+            tokenizer=tokenizer,
+            seq_len=resolved_seq_len,
+        ),
+        "ood": tokenize_lm_examples(
+            ood_examples,
+            tokenizer=tokenizer,
+            seq_len=resolved_seq_len,
+        ),
+    }
+    return datasets, resolved_seq_len, resolved_step_counts
+
+
+def _evaluate_real_checkpoint(
+    trainer: CausalLMTrainer,
+    checkpoint_path: Path,
+    experiment_dir: Path,
+    val_dataset: list,
+    test_dataset: list,
+    ood_dataset: list,
+    device: str,
+) -> tuple[
+    dict[str, object],
+    dict[str, object],
+    dict[str, object],
+    dict[str, object],
+    list[int],
+    list[int],
+]:
+    import torch
+
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    trainer.model.load_state_dict(checkpoint["model_state"])
+
+    val_metrics = trainer.evaluate(val_dataset, split_name="val")
+    id_metrics = trainer.evaluate(test_dataset, split_name="test")
+    ood_metrics = trainer.evaluate(ood_dataset, split_name="ood")
+
+    history = {
+        "epochs": checkpoint.get("history", []),
+        "best_epoch": checkpoint.get("best_epoch"),
+    }
+    id_correctness = _load_answer_correctness(experiment_dir / "test_predictions.jsonl")
+    ood_correctness = _load_answer_correctness(experiment_dir / "ood_predictions.jsonl")
+    return history, val_metrics, id_metrics, ood_metrics, id_correctness, ood_correctness
+
+
 def _run_smoke_brs_experiment(
     spec,
     output_root: Path,
@@ -294,6 +395,7 @@ def _run_real_brs_experiment(
     learning_rate: float | None,
     seq_len: int | None,
     seed: int | None,
+    evaluate_only_checkpoint_path: Path | None = None,
 ) -> dict[str, object]:
     import torch
 
@@ -306,8 +408,6 @@ def _run_real_brs_experiment(
     experiment_dir = Path(output_root) / spec.experiment_id
     model = _build_real_model(spec, model_name=model_name)
     tokenizer = _load_tokenizer(model_name)
-
-    resolved_step_counts = step_counts or tuple(spec.resolved_config["data"].get("steps", [2, 4, 6]))
     training_config = spec.resolved_config["training"]
     trainer = CausalLMTrainer(
         model=model,
@@ -325,46 +425,37 @@ def _run_real_brs_experiment(
         grad_clip_norm=float(training_config.get("grad_clip_norm", 1.0)),
     )
 
-    train_examples = build_brs_lm_examples(
+    datasets, resolved_seq_len, resolved_step_counts = _build_real_datasets(
+        spec=spec,
         data_dir=data_dir,
-        split_name="train",
-        step_counts=resolved_step_counts,
-        sample_limit_per_step=_resolve_limit(train_limit_per_step, None),
-    )
-    val_examples = build_brs_lm_examples(
-        data_dir=data_dir,
-        split_name="val",
-        step_counts=resolved_step_counts,
-        sample_limit_per_step=_resolve_limit(val_limit_per_step, None),
-    )
-    test_examples = build_brs_lm_examples(
-        data_dir=data_dir,
-        split_name="test",
-        step_counts=resolved_step_counts,
-        sample_limit_per_step=_resolve_limit(test_limit_per_step, None),
-    )
-    ood_examples = build_brs_lm_examples(
-        data_dir=data_dir,
-        split_name="ood",
-        step_counts=resolved_step_counts,
-        sample_limit_per_step=_resolve_limit(ood_limit_per_step, None),
+        tokenizer=tokenizer,
+        step_counts=step_counts,
+        train_limit_per_step=train_limit_per_step,
+        val_limit_per_step=val_limit_per_step,
+        test_limit_per_step=test_limit_per_step,
+        ood_limit_per_step=ood_limit_per_step,
+        seq_len=seq_len,
     )
 
-    resolved_seq_len = int(seq_len or training_config.get("seq_len", 192))
-    train_dataset = tokenize_lm_examples(train_examples, tokenizer=tokenizer, seq_len=resolved_seq_len)
-    val_dataset = tokenize_lm_examples(val_examples, tokenizer=tokenizer, seq_len=resolved_seq_len)
-    test_dataset = tokenize_lm_examples(test_examples, tokenizer=tokenizer, seq_len=resolved_seq_len)
-    ood_dataset = tokenize_lm_examples(ood_examples, tokenizer=tokenizer, seq_len=resolved_seq_len)
+    if evaluate_only_checkpoint_path is None:
+        trainer.fit(train_dataset=datasets["train"], val_dataset=datasets["val"])
+        checkpoint_path = experiment_dir / "best_checkpoint.pt"
+    else:
+        checkpoint_path = Path(evaluate_only_checkpoint_path)
+        if not checkpoint_path.is_file():
+            raise FileNotFoundError(f"evaluate-only checkpoint 不存在：{checkpoint_path}")
 
-    history = trainer.fit(train_dataset=train_dataset, val_dataset=val_dataset)
-    checkpoint = torch.load(experiment_dir / "best_checkpoint.pt", map_location=device)
-    trainer.model.load_state_dict(checkpoint["model_state"])
-    val_metrics = trainer.evaluate(val_dataset, split_name="val")
-    id_metrics = trainer.evaluate(test_dataset, split_name="test")
-    ood_metrics = trainer.evaluate(ood_dataset, split_name="ood")
-
-    id_correctness = _load_answer_correctness(experiment_dir / "test_predictions.jsonl")
-    ood_correctness = _load_answer_correctness(experiment_dir / "ood_predictions.jsonl")
+    history, val_metrics, id_metrics, ood_metrics, id_correctness, ood_correctness = (
+        _evaluate_real_checkpoint(
+            trainer=trainer,
+            checkpoint_path=checkpoint_path,
+            experiment_dir=experiment_dir,
+            val_dataset=datasets["val"],
+            test_dataset=datasets["test"],
+            ood_dataset=datasets["ood"],
+            device=device,
+        )
+    )
 
     summary = {
         "experiment_id": spec.experiment_id,
@@ -419,6 +510,7 @@ def run_brs_experiment(
     gradient_accumulation_steps: int | None = None,
     learning_rate: float | None = None,
     seq_len: int | None = None,
+    evaluate_only_checkpoint_path: Path | None = None,
 ) -> dict[str, object]:
     spec = get_brs_experiment_spec(experiment_id, configs_dir)
     if runtime_mode == "smoke":
@@ -451,5 +543,6 @@ def run_brs_experiment(
             learning_rate=learning_rate,
             seq_len=seq_len,
             seed=seed,
+            evaluate_only_checkpoint_path=evaluate_only_checkpoint_path,
         )
     raise ValueError("runtime_mode 仅支持 smoke 或 real")

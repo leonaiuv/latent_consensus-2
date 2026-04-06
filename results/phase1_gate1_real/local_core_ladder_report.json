@@ -1,0 +1,118 @@
+{
+  "mode": "arithmetic",
+  "completed_experiments": [
+    "EXP-A01",
+    "EXP-A02",
+    "EXP-A03",
+    "EXP-A04",
+    "EXP-A05",
+    "EXP-A06"
+  ],
+  "gate1_summary": {
+    "stage": "phase1_gate1",
+    "passed": false,
+    "cot_lc1_stable": true,
+    "shared_runs_complete": true,
+    "artifacts_complete": true,
+    "stability_checks": {
+      "EXP-A01": {
+        "stable": true,
+        "epoch_count": 5,
+        "best_epoch": 4,
+        "finite_losses": true
+      },
+      "EXP-A02": {
+        "stable": true,
+        "epoch_count": 5,
+        "best_epoch": 4,
+        "finite_losses": true
+      },
+      "EXP-A03": {
+        "stable": true,
+        "epoch_count": 5,
+        "best_epoch": 4,
+        "finite_losses": true
+      },
+      "EXP-A04": {
+        "stable": true,
+        "epoch_count": 5,
+        "best_epoch": 4,
+        "finite_losses": true
+      },
+      "EXP-A05": {
+        "stable": true,
+        "epoch_count": 5,
+        "best_epoch": 4,
+        "finite_losses": true
+      },
+      "EXP-A06": {
+        "stable": true,
+        "epoch_count": 5,
+        "best_epoch": 4,
+        "finite_losses": true
+      }
+    },
+    "gradient_check": {
+      "min_step": 2,
+      "max_step": 6,
+      "min_pass_count": 4,
+      "min_mean_delta": 0.05,
+      "pass_count": 2,
+      "mean_delta": 0.005208333333333333,
+      "passed": false,
+      "per_experiment": [
+        {
+          "experiment_id": "EXP-A01",
+          "step_accuracy_low": 1.0,
+          "step_accuracy_high": 1.0,
+          "delta": 0.0,
+          "passed": false
+        },
+        {
+          "experiment_id": "EXP-A02",
+          "step_accuracy_low": 1.0,
+          "step_accuracy_high": 1.0,
+          "delta": 0.0,
+          "passed": false
+        },
+        {
+          "experiment_id": "EXP-A03",
+          "step_accuracy_low": 1.0,
+          "step_accuracy_high": 0.984375,
+          "delta": 0.015625,
+          "passed": true
+        },
+        {
+          "experiment_id": "EXP-A04",
+          "step_accuracy_low": 1.0,
+          "step_accuracy_high": 0.984375,
+          "delta": 0.015625,
+          "passed": true
+        },
+        {
+          "experiment_id": "EXP-A05",
+          "step_accuracy_low": 1.0,
+          "step_accuracy_high": 1.0,
+          "delta": 0.0,
+          "passed": false
+        },
+        {
+          "experiment_id": "EXP-A06",
+          "step_accuracy_low": 1.0,
+          "step_accuracy_high": 1.0,
+          "delta": 0.0,
+          "passed": false
+        }
+      ]
+    },
+    "artifact_check": {
+      "passed": true,
+      "missing_by_experiment": {}
+    },
+    "notes": [
+      "2-step 相对 6-step 的难度梯度仍不清晰，当前不能视为正式 Gate 1 通过。"
+    ]
+  },
+  "gate2_summary": null,
+  "brs_blocked_by_gate1": false
+}
