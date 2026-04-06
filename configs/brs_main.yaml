@@ -11,3 +11,7 @@ data:
   val_per_step: 400
   test_per_step: 400
   ood_per_step: 400
+
+training:
+  # 正式规模 BRS 的 OOD step6 文本长度实测最高约 247 token，需给答案区保留余量。
+  seq_len: 256

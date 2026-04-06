@@ -11,6 +11,7 @@ import torch
 
 ARITHMETIC_PROMPT_TEMPLATE = "题目：{expression}\n请逐步计算并给出最终答案。\n"
 ARITHMETIC_ANSWER_PREFIX = "\n答案： "
+BRS_ANSWER_PREFIX = "\n答案： "
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,44 @@ def build_arithmetic_lm_examples(
             answer_prefix_text = (
                 f"{prompt_text}{reasoning_text}{ARITHMETIC_ANSWER_PREFIX}"
             )
+            examples.append(
+                LMExample(
+                    sample_id=record["sample_id"],
+                    step_count=record["step_count"],
+                    prompt_text=prompt_text,
+                    target_text=target_text,
+                    answer_text=str(record["answer"]),
+                    answer_prefix_text=answer_prefix_text,
+                )
+            )
+
+    return examples
+
+
+def build_brs_lm_examples(
+    data_dir: Path,
+    split_name: str,
+    step_counts: tuple[int, ...],
+    sample_limit_per_step: int | None = None,
+) -> list[LMExample]:
+    data_dir = Path(data_dir)
+    examples: list[LMExample] = []
+
+    for step_count in step_counts:
+        file_path = data_dir / f"{split_name}_step{step_count}.jsonl"
+        if not file_path.is_file():
+            raise FileNotFoundError(f"BRS 数据文件不存在：{file_path}")
+
+        split_records = file_path.read_text(encoding="utf-8").splitlines()
+        if sample_limit_per_step is not None:
+            split_records = split_records[:sample_limit_per_step]
+
+        for line in split_records:
+            record = json.loads(line)
+            prompt_text = _build_brs_prompt_text(record)
+            reasoning_text = "\n".join(record["teacher_steps"])
+            target_text = f"{reasoning_text}{BRS_ANSWER_PREFIX}{record['answer']}"
+            answer_prefix_text = f"{prompt_text}{reasoning_text}{BRS_ANSWER_PREFIX}"
             examples.append(
                 LMExample(
                     sample_id=record["sample_id"],
@@ -159,6 +198,21 @@ def collate_tokenized_examples(
 
 def decode_token_ids(tokenizer, token_ids: list[int]) -> str:
     return tokenizer.decode(token_ids, skip_special_tokens=True).strip()
+
+
+def _build_brs_prompt_text(record: dict[str, object]) -> str:
+    entities = ", ".join(record["entities"])
+    facts = "\n".join(
+        f"- {left} > {right}"
+        for left, right in record["facts"]
+    )
+    query = str(record["query"])
+    return (
+        f"实体：{entities}\n"
+        f"事实：\n{facts}\n"
+        f"问题：{query}\n"
+        "请找出唯一正确链路，并逐步推理后给出最终答案。\n"
+    )
 
 
 def _ensure_padding_token(tokenizer) -> None:

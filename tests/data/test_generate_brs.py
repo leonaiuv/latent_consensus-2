@@ -5,6 +5,7 @@ from latent_consensus.data.brs import (
     count_paths,
     generate_brs_sample,
 )
+from latent_consensus.data.validation import validate_brs_bundle
 
 
 def test_generate_brs_sample_has_unique_solution_path() -> None:
@@ -89,3 +90,20 @@ def test_brs_template_signatures_do_not_overlap_across_splits() -> None:
     assert train_signatures.isdisjoint(test_signatures)
     assert train_signatures.isdisjoint(ood_signatures)
     assert val_signatures.isdisjoint(test_signatures)
+
+
+def test_build_brs_dataset_bundle_supports_larger_phase2_like_split_sizes() -> None:
+    bundle = build_brs_dataset_bundle(
+        step_counts=(2, 4, 6),
+        split_sizes={"train": 60, "val": 12, "test": 12, "ood": 12},
+        id_config=BRSConfig(entity_count=12, distractor_count=3, step_count=2),
+        ood_config=BRSConfig(entity_count=16, distractor_count=5, step_count=2),
+        base_seed=500,
+    )
+
+    report = validate_brs_bundle(bundle)
+
+    assert len(bundle["train"][6]) == 60
+    assert len(bundle["ood"][6]) == 12
+    assert report["duplicates"] == 0
+    assert report["template_overlaps"] == 0

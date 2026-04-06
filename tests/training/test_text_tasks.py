@@ -4,6 +4,7 @@ from pathlib import Path
 from latent_consensus.training.text_tasks import (
     LMExample,
     build_arithmetic_lm_examples,
+    build_brs_lm_examples,
     collate_tokenized_examples,
     tokenize_lm_examples,
 )
@@ -119,6 +120,34 @@ def test_tokenize_lm_examples_masks_prompt_and_marks_answer_tokens() -> None:
     assert item.labels.count(-100) > 0
     assert any(item.answer_mask)
     assert item.answer_text == "3"
+
+
+def test_build_brs_lm_examples_reads_jsonl_files(tmp_path) -> None:
+    sample = {
+        "sample_id": "train-step2-0",
+        "step_count": 2,
+        "entities": ["A", "B", "C", "D"],
+        "facts": [["A", "B"], ["B", "C"], ["A", "D"]],
+        "source": "A",
+        "target": "C",
+        "query": "A ? C",
+        "teacher_steps": ["[STEP 1] A > B", "[STEP 2] A > C"],
+        "answer": "A > C",
+        "dead_end_branch": [["A", "D"]],
+    }
+    data_path = tmp_path / "train_step2.jsonl"
+    data_path.write_text(json.dumps(sample, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    examples = build_brs_lm_examples(
+        data_dir=tmp_path,
+        split_name="train",
+        step_counts=(2,),
+    )
+
+    assert len(examples) == 1
+    assert examples[0].sample_id == "train-step2-0"
+    assert "事实：" in examples[0].prompt_text
+    assert "答案：" in examples[0].target_text
 
 
 def test_collate_tokenized_examples_stacks_tensors_and_metadata() -> None:

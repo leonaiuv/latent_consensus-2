@@ -1,0 +1,153 @@
+{
+  "date": "2026-04-06",
+  "project": "latent_consensus",
+  "summary_scope": "截至 2026-04-06 的 Gate 0 与 Phase 1 真实预跑状态",
+  "research_background": {
+    "version": "v1.2.3",
+    "goal": "在本地 M4 16GB 条件下完成最小因果闭环，先验证 observe_gain 的工程可行性，再决定是否扩 N、独立权重或云端实验",
+    "hardware": "M4 Mac, 16GB unified memory",
+    "framework": "PyTorch + MPS",
+    "base_model": "GPT-2 124M",
+    "phase1_role": "Arithmetic-Debug 仅用于 Gate 1 链路验证，不作为主 headline"
+  },
+  "current_status": {
+    "gate0_passed": true,
+    "phase1_real_preflight_completed": true,
+    "phase1_gate1_passed": false
+  },
+  "gate0": {
+    "device": "mps",
+    "step_count": 10,
+    "runtime_status": "ok",
+    "oom": false,
+    "fallback_triggered": false,
+    "mean_step_ms": 890.4217041002994,
+    "warm_step_ms": 425.2754165556528,
+    "max_current_allocated_memory": 2053168128.0,
+    "recommended_max_memory": 12713115648.0,
+    "dataset_validation": {
+      "arithmetic_debug": {
+        "duplicates": 0,
+        "ood_leaks": 0,
+        "template_overlaps": 0
+      },
+      "brs": {
+        "duplicates": 0,
+        "ood_leaks": 0,
+        "template_overlaps": 0
+      }
+    },
+    "accounting": {
+      "gpt2_params": 124439808,
+      "lc2_shared_train_flops_per_step": 440385511882752,
+      "lc2_shared_infer_flops_per_sample": 23892443136
+    }
+  },
+  "phase1_preflight": {
+    "run_scope": {
+      "train_limit_per_step": 16,
+      "val_limit_per_step": 8,
+      "test_limit_per_step": 8,
+      "ood_limit_per_step": 8,
+      "max_epochs": 1,
+      "batch_size": 2,
+      "gradient_accumulation_steps": 1
+    },
+    "runs": [
+      {
+        "experiment_id": "EXP-A01",
+        "model_family": "cot",
+        "test_exact_match": 0.8333333333333334,
+        "test_step_accuracy": {
+          "2": 0.875,
+          "4": 1.0,
+          "6": 0.625
+        },
+        "ood_exact_match": 0.9583333333333334
+      },
+      {
+        "experiment_id": "EXP-A02",
+        "model_family": "lc1",
+        "test_exact_match": 0.5833333333333334,
+        "test_step_accuracy": {
+          "2": 0.5,
+          "4": 0.625,
+          "6": 0.625
+        },
+        "ood_exact_match": 0.5833333333333334
+      },
+      {
+        "experiment_id": "EXP-A03",
+        "model_family": "lcn_shared",
+        "test_exact_match": 0.9583333333333334,
+        "test_step_accuracy": {
+          "2": 1.0,
+          "4": 0.875,
+          "6": 1.0
+        },
+        "ood_exact_match": 0.8333333333333334
+      },
+      {
+        "experiment_id": "EXP-A04",
+        "model_family": "ind_n_shared",
+        "test_exact_match": 0.7916666666666666,
+        "test_step_accuracy": {
+          "2": 0.875,
+          "4": 0.75,
+          "6": 0.75
+        },
+        "ood_exact_match": 0.7916666666666666
+      },
+      {
+        "experiment_id": "EXP-A05",
+        "model_family": "lcn_shared",
+        "test_exact_match": 0.8333333333333334,
+        "test_step_accuracy": {
+          "2": 0.875,
+          "4": 0.75,
+          "6": 0.875
+        },
+        "ood_exact_match": 0.875
+      },
+      {
+        "experiment_id": "EXP-A06",
+        "model_family": "ind_n_shared",
+        "test_exact_match": 0.7916666666666666,
+        "test_step_accuracy": {
+          "2": 0.75,
+          "4": 0.75,
+          "6": 0.875
+        },
+        "ood_exact_match": 0.75
+      }
+    ]
+  },
+  "issues": [
+    {
+      "id": "001",
+      "title": "BRS 默认模板容量不足",
+      "status": "缓解，未根治"
+    },
+    {
+      "id": "002",
+      "title": "Arithmetic 答案边界被 tokenizer 吞并",
+      "status": "已解决"
+    },
+    {
+      "id": "003",
+      "title": "Phase 1 小样本预跑的难度梯度不稳定",
+      "status": "未解决"
+    }
+  ],
+  "likely_causes": [
+    "当前 Phase 1 结果更像真实链路验收跑，而不是正式训练规模",
+    "每个 step bucket 的样本量太小，方差过大",
+    "只训练 1 个 epoch，不足以稳定体现 2-step 与 6-step 的难度梯度",
+    "当前重点已经从“能不能跑”转为“Gate 1 是否足够稳，是否可以放行 BRS”"
+  ],
+  "recommended_questions_for_research_review": [
+    "Arithmetic 是否必须严格承担 Gate 1 准入责任，还是只要真实链路打通即可进入 BRS 小规模 pilot",
+    "下一轮预算应优先投给 Arithmetic 扩样本与训练轮数，还是直接投给 BRS 真实 pilot",
+    "当前 LC-N / Ind-N 的真实实现是否已足够贴近 v1.2.3 手册中的 shared observe on/off 设计"
+  ]
+}

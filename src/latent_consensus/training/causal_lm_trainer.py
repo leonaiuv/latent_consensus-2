@@ -12,6 +12,25 @@ from torch.utils.data import DataLoader
 from latent_consensus.training.text_tasks import collate_tokenized_examples, decode_token_ids
 
 
+def _accumulate_loss_value(
+    current_total: torch.Tensor | None,
+    loss: torch.Tensor,
+) -> torch.Tensor:
+    detached_loss = loss.detach()
+    if current_total is None:
+        return detached_loss
+    return current_total + detached_loss
+
+
+def _finalize_loss_value(
+    total_loss: torch.Tensor | None,
+    count: int,
+) -> float:
+    if total_loss is None or count <= 0:
+        return 0.0
+    return float((total_loss / count).item())
+
+
 class CausalLMTrainer:
     def __init__(
         self,
@@ -98,7 +117,7 @@ class CausalLMTrainer:
     ) -> dict[str, object]:
         dataloader = self._build_dataloader(dataset, shuffle=False)
         self.model.eval()
-        total_loss = 0.0
+        total_loss = None
         batch_count = 0
         exact_match_count = 0
         prediction_records: list[dict[str, object]] = []
@@ -113,7 +132,7 @@ class CausalLMTrainer:
                     attention_mask=device_batch["attention_mask"],
                     labels=device_batch["labels"],
                 )
-                total_loss += float(output.loss.item())
+                total_loss = _accumulate_loss_value(total_loss, output.loss)
                 batch_count += 1
 
                 batch_records = self._build_prediction_records(
@@ -133,7 +152,7 @@ class CausalLMTrainer:
                 handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
         metrics = {
-            "loss": total_loss / max(batch_count, 1),
+            "loss": _finalize_loss_value(total_loss, count=batch_count),
             "exact_match": exact_match_count / max(len(prediction_records), 1),
             "step_accuracy": {
                 str(step_count): step_correct[step_count] / max(step_total[step_count], 1)
@@ -150,7 +169,7 @@ class CausalLMTrainer:
         dataloader = self._build_dataloader(dataset, shuffle=True)
         self.model.train()
         self.optimizer.zero_grad(set_to_none=True)
-        total_loss = 0.0
+        total_loss = None
         step_count = 0
 
         for batch_index, batch in enumerate(dataloader, start=1):
@@ -162,7 +181,7 @@ class CausalLMTrainer:
             )
             loss = output.loss / self.gradient_accumulation_steps
             loss.backward()
-            total_loss += float(output.loss.item())
+            total_loss = _accumulate_loss_value(total_loss, output.loss)
             step_count += 1
 
             if batch_index % self.gradient_accumulation_steps == 0:
@@ -175,7 +194,7 @@ class CausalLMTrainer:
             self.optimizer.step()
             self.optimizer.zero_grad(set_to_none=True)
 
-        return total_loss / max(step_count, 1)
+        return _finalize_loss_value(total_loss, count=step_count)
 
     def _build_prediction_records(
         self,

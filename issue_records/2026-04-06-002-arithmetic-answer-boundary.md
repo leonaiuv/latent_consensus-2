@@ -50,6 +50,17 @@ ValueError: train-step2-0 的 answer 被完全截断
 
 两者已通过。
 
+在后续正式 `Phase 1` 6-run 完成后，又做了一轮结果侧复核：
+
+- 扫描目录：`results/phase1_gate1_real/arithmetic_debug/EXP-A*/{val,test,ood}_predictions.jsonl`
+- 重点检查：
+  - `predicted_answer` 明显短于 `gold_answer`
+  - `predicted_answer` 只是 `gold_answer` 的数字前缀
+  - `predicted_answer` 含有 `+ - * / =` 等明显残缺符号
+- 结果：`suspicious_count = 0`
+
+这说明在正式 6-run 路径下，之前出现过的 `"505" -> "5"`、`"660" -> "5"`、`"4 *"` 这类截断残留，本轮没有再出现。
+
 ## 当前状态
 
 - 状态：已解决

@@ -4,7 +4,11 @@ import torch
 from transformers import GPT2Config
 
 from latent_consensus.models.latent_consensus_causal_lm import LatentConsensusCausalLM
-from latent_consensus.training.causal_lm_trainer import CausalLMTrainer
+from latent_consensus.training.causal_lm_trainer import (
+    CausalLMTrainer,
+    _accumulate_loss_value,
+    _finalize_loss_value,
+)
 from latent_consensus.training.text_tasks import LMExample, collate_tokenized_examples, tokenize_lm_examples
 
 
@@ -131,3 +135,15 @@ def test_causal_lm_trainer_writes_checkpoints_and_predictions(tmp_path: Path) ->
     metrics = trainer.evaluate(encoded, split_name="eval")
     assert "exact_match" in metrics
     assert "step_accuracy" in metrics
+
+
+def test_finalize_loss_value_returns_zero_for_empty_accumulator() -> None:
+    assert _finalize_loss_value(None, count=0) == 0.0
+
+
+def test_accumulate_and_finalize_loss_value_keeps_mean_semantics() -> None:
+    total_loss = None
+    total_loss = _accumulate_loss_value(total_loss, torch.tensor(2.0))
+    total_loss = _accumulate_loss_value(total_loss, torch.tensor(4.0))
+
+    assert _finalize_loss_value(total_loss, count=2) == 3.0
