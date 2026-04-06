@@ -11,14 +11,20 @@ model:
   weight_mode: shared
   n_processors: 1
   k_steps: 5
+  alpha_init: 0.1
+  dropout: 0.1
+  noise_std: 0.005
 
 training:
   seq_len: 192
   effective_batch_size: 64
   micro_batch_size: 2
   gradient_accumulation_steps: 32
+  learning_rate: 5.0e-5
   max_epoch: 30
   early_stopping_patience: 5
+  grad_clip_norm: 1.0
+  smoke_epochs: 2
 
 logging:
   results_root: results
